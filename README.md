@@ -78,7 +78,7 @@ auto my_texture_view = make_handle(defer_scope{}, texture_view(my_device, my_tex
 my_texture_view.destroy<[]{}>(my_device, my_texture.get<[]{}>());
 my_texture.destroy<[]{}>(my_device);
 /*
-	remove or changing the order of the destroy calls will cause a static assert
+	removing or changing the order of the destroy calls will cause a static assert
 */
 
 defer_scope{}.apply<[]{}>();
