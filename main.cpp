@@ -32,7 +32,7 @@ auto handle_test() {
     my_texture_view.destroy<[]{}>(my_device, my_texture.get<[]{}>());
     my_texture.destroy<[]{}>(my_device);
     /*
-        remove or changing the order of the destroy calls will cause a static assert
+        removing or changing the order of the destroy calls will cause a static assert
     */
 
     defer_scope{}.apply<[]{}>();
