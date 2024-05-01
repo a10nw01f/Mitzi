@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <string_view>
 
 namespace mitzi {
 
@@ -58,4 +59,17 @@ namespace mitzi {
         return reversed{};
     }
 
+    enum class mode {
+        run,
+        analyze
+    };
+
+    constexpr auto hash_str(std::string_view s) -> uint32_t {
+        uint32_t hash = 0;
+        for (auto i : s) {
+            hash *= 0x811C9DC5;
+            hash ^= static_cast<uint32_t>(i);
+        }
+        return hash;
+    }
 }

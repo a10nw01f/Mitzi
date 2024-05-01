@@ -2,6 +2,10 @@
 
 Mitzi is a header-only library designed to provide advanced compile-time validation capabilities in C++. Leveraging the power of stateful metaprogramming, Mitzi aims to enhance code safety and performance by offering features such as borrow checking, lifetime management, and destructor arguments. It uses C++23 and is currently in its early stages of development.
 
+### Blogpost - https://a10nw01f.github.io/post/advanced_compile_time_validation/
+
+### Compiler Explorer - https://godbolt.org/z/vs7Efshx1
+
 ## Features
 
 ### Borrow Checking

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "mitzi/mitzhi.h"
+#include "mitzi/mitzi.h"
 
 using namespace mitzi;
 
@@ -117,6 +117,31 @@ auto borrow_test() {
 }
 
 int borrow_test_result = borrow_test();
+
+enum class usage_flags {
+    local = 1,
+    gpu_read = 2,
+    other = 4
+};
+
+struct buffer {};
+
+template<mode = mode::run>
+auto usage_test() {
+    usage<buffer, source_loc_id{}> buffer;
+
+    constexpr auto need_sync = (buffer.get_usage<[]{}>() & (uint32_t)usage_flags::gpu_read) != 0;
+
+    buffer.use<usage_flags::local, []{}>();
+    buffer.use<usage_flags::gpu_read, []{}>();
+
+    std::cout << "need_sync:" << need_sync << "\n";
+
+    return 0;
+}
+using T1 = decltype(usage_test<mode::analyze>());
+
+auto usage_test_result = usage_test();
 
 int main() {
 	return 0;
