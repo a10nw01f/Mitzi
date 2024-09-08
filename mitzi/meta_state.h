@@ -25,11 +25,11 @@ namespace mitzi {
         auto tag
     >
     struct setter {
-        friend auto inject_state_func(reader<N, tag>) {
-            return T{};
-        }
-
         static constexpr state_t<N, T> state{};
+
+        friend auto inject_state_func(reader<N, tag>) {
+            return state;
+        }
     };
 
     template<
@@ -47,7 +47,7 @@ namespace mitzi {
         }
         else {
             constexpr reader<N - 1, tag> r;
-            return state_t<N - 1, decltype(inject_state_func(r))>{};
+            return decltype(inject_state_func(r)){};
         }
     }
 
@@ -61,23 +61,15 @@ namespace mitzi {
 
 
     template<
-        typename T,
+        class T,
         auto tag,
         auto eval
     >
     consteval auto set_state_impl() {
         using cur_state = decltype(get_last_state<tag, eval>());
-        setter<cur_state::n + 1, T, tag> s;
-        return s.state;
+        using next = setter<cur_state::n + 1, T, tag>;
+        return next{}.state;
     }
-
-    template<
-        class T,
-        auto tag,
-        auto eval = [] {},
-        auto state = set_state_impl<T, tag, eval>()
-    >
-    constexpr auto set_state = [] { return state; };
 
     struct none {};
 
@@ -88,7 +80,7 @@ namespace mitzi {
             typename T,
             auto eval = [] {}
         >
-        using set = decltype(set_state<T, tag, eval>());
+        using set = decltype(set_state_impl<T, tag, eval>());
 
         template<auto eval = [] {} >
         using get = typename get_state<tag, eval>::type;
