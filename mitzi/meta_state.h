@@ -84,9 +84,6 @@ namespace mitzi {
 
         template<auto eval = [] {} >
         using get = typename get_state<tag, eval>::type;
-
-        template<auto eval = [] {} >
-        constexpr auto type() const->meta_state::get<eval>;
     private:
         static constexpr setter<0, Init, tag> init = {};
     };

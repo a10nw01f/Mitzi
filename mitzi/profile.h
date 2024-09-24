@@ -29,7 +29,7 @@ namespace mitzi {
 				auto eval = [] {},
 				class list = state::record::state:: template get<eval>
 			>
-			static constexpr auto validate(decltype(eval) = {}) {
+			static constexpr auto validate() {
 				constexpr auto records = unpack_records(list{});
 
 				return [records](this auto&& self, auto rules) {
@@ -52,7 +52,7 @@ namespace mitzi {
 				auto eval = [] {},
 				class list = state::record::state:: template get<eval>
 			>
-			static constexpr auto get_records(decltype(eval) = {}) {
+			static constexpr auto get_records() {
 				return unpack_records(list{});
 			}
 		};
@@ -67,7 +67,7 @@ namespace mitzi {
 		class Ret = decltype(std::declval<Fn>()(init{}, init_records{})),
 		class records = records_getter<typename init::state::record>
 	>
-	decltype(auto) run(Profile, Fn&& fn, decltype(eval) = {}) {
+	decltype(auto) run(Profile, Fn&& fn) {
 		static constexpr auto optional_error = init::validate();
 		static constexpr auto error = [] {
 			if constexpr (optional_error) {

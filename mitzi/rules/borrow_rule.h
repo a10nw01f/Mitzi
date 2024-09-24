@@ -72,7 +72,7 @@ namespace mitzi {
 				auto id = state::counter::template next<eval>(),
 				class T
 			>
-			static auto borrow(T&& arg, decltype(eval) = {}) {
+			static auto borrow(T&& arg) {
 				return borrowable(
 					type_wrapper<std::remove_cvref_t<T>>{},
 					record_and_id<typename state::record, id>{},

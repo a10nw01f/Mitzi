@@ -15,7 +15,7 @@ int main() {
 		auto vec = M::borrow(std::vector{ 42 });
 
 		// uncommenting any of the line will produce an error
-		M_({ )
+		M_({)
 			auto outer = M::ptr(vec.ref()[0]);
 			M_({)
 				auto vec2 = M::borrow(std::vector{ 0xCA7 });

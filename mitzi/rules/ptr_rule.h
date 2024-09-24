@@ -36,7 +36,7 @@ namespace mitzi {
 			int other_id = -1,
 			auto v = record::template add < ptr_record{ ptr_command::assign, id, other_id }, eval > ()
 		>
-		ptr& assign(ptr<T, record, other_id> other, decltype(eval) = {}) {
+		ptr& assign(ptr<T, record, other_id> other) {
 			this->data = other.data;
 			return *this;
 		}
@@ -55,7 +55,7 @@ namespace mitzi {
 				auto id = state::counter::template next<eval>(),
 				class T
 			>
-			static constexpr auto ptr(T&& value, decltype(eval) = {}) {
+			static constexpr auto ptr(T&& value) {
 				constexpr auto v = state::record::template add < ptr_record{ ptr_command::init, id, -1 } > ();
 				return mitzi::ptr(value, mitzi::record_and_id<typename state::record, id>{});
 			}

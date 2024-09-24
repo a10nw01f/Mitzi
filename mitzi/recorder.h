@@ -15,7 +15,7 @@ namespace mitzi {
 		return std::array<element_type, sizeof...(vs)>{ element_type(vs)... };
 	}
 
-	template<auto error, auto Eval = [] {} >
+	template<validation_error error, auto Eval = [] {} >
 	struct recorder {
 		using state = meta_state < value_list < none{} > , Eval > ;
 
@@ -38,7 +38,7 @@ namespace mitzi {
 			auto eval = [] {},
 			class list = state::template get<eval>
 		>
-		static constexpr auto get(decltype(eval) = {}) {
+		static constexpr auto get() {
 			return unpack_records(list{});
 		}
 	};
