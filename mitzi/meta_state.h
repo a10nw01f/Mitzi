@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include "utils.h"
 
 namespace mitzi {
 
@@ -31,6 +32,9 @@ namespace mitzi {
             return state;
         }
     };
+
+    template <auto tag, auto version, auto eval = []{}>
+    using get_state_type = typename decltype(inject_state_func(reader<version, tag>{}))::type;
 
     template<
         auto tag,
@@ -71,21 +75,44 @@ namespace mitzi {
         return next{}.state;
     }
 
+    template <auto tag,
+              auto eval = [] {},
+              auto size = decltype(get_last_state<tag, eval>())::n,
+              auto... Is>
+    consteval auto get_all_versions(std::index_sequence<Is...> = {}) {
+      if constexpr (sizeof...(Is) == size + 1) {
+        return type_list<get_state_type<tag, Is>...>{};
+      } else {
+        return get_all_versions<tag, eval, size>(
+            std::make_index_sequence<size + 1>{});
+      }
+    }
+
     struct none {};
 
-    template<class Init = none, auto tag = [] {} >
+    template<class Init = none, auto ttag = [] {} >
     class meta_state {
     public:
         template<
             typename T,
             auto eval = [] {}
         >
-        using set = decltype(set_state_impl<T, tag, eval>());
+        using set = decltype(set_state_impl<T, ttag, eval>());
+
+        template<
+            auto eval = [] {}
+        >
+        static constexpr auto get_version = get_state<ttag, eval>::n;
 
         template<auto eval = [] {} >
-        using get = typename get_state<tag, eval>::type;
-    private:
-        static constexpr setter<0, Init, tag> init = {};
+        using get = typename get_state<ttag, eval>::type;
+
+        static constexpr auto tag = ttag;
+
+        template <auto eval = [] {}>
+        using all_versions = decltype(get_all_versions<ttag, eval>()); 
+    private: 
+      static constexpr setter<0, Init, ttag> init = {};
     };
 
 }
