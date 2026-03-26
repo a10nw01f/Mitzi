@@ -30,7 +30,7 @@ class fixed_string {
 
   constexpr fixed_string(std::string_view sv) { assign(sv); }
 
-  template<int NN>
+  template<auto NN>
   constexpr fixed_string(char const (&str)[NN]) { 
     assign(std::string_view(str, str + NN)); 
   }

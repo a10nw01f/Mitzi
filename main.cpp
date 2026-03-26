@@ -57,10 +57,6 @@ struct base_provider<std::ostream> {
   };
 };
 
-constexpr auto get_lifetime_constraints(auto, auto, const ir::exp& expression) {
-  return std::vector<lifetime_constraint>{};
-}
-
 template <class R, class T1>
 constexpr auto get_lifetime_constraints(
     value_wrapper<ir::func_name("operator&")>,

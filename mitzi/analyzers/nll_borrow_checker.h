@@ -4,7 +4,6 @@
 #include <vector>
 #include <optional>
 #include <bitset>
-#include "cfg.h"
 #include "../ir.h"
 #include "../utils.h"
 
@@ -14,6 +13,11 @@ struct lifetime_constraint {
   int superset;
   int subset;
 };
+
+
+constexpr auto get_lifetime_constraints(auto, auto, const ir::exp& expression) {
+  return std::vector<lifetime_constraint>{};
+}
 
 class nll_borrow_checker {
  public:
