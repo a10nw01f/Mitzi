@@ -6,6 +6,8 @@
 #include "mitzi/analyzers/nll_borrow_checker.h"
 #include "mitzi/analyzers/print.h"
 
+TEMPLATE_CONCEPT_EX(vector, std::vector)
+
 namespace mitzi {
 template <>
 struct base_provider<int> {
@@ -54,14 +56,8 @@ struct base_provider<std::ostream> {
     WRAP_BINARY_OP(<<)
   };
 };
-}  // namespace mitzi
 
-using namespace mitzi;
-
-constexpr auto get_lifetime_constraints(
-    auto,
-    auto,
-    ir::exp expression) {
+constexpr auto get_lifetime_constraints(auto, auto, const ir::exp& expression) {
   return std::vector<lifetime_constraint>{};
 }
 
@@ -69,35 +65,40 @@ template <class R, class T1>
 constexpr auto get_lifetime_constraints(
     value_wrapper<ir::func_name("operator&")>,
     type_list<R, T1>,
-    ir::exp expression) {
-  return std::vector<lifetime_constraint>{lifetime_constraint{
-      .superset = expression.args[0], .subset = expression.id}};
+    const ir::exp& expression) {
+  return std::vector<lifetime_constraint>{
+      {.superset = expression.args[0], .subset = expression.id}};
 }
-
-TEMPLATE_CONCEPT_EX(vector, std::vector)
 
 template <class R, vector_c T1, class T2>
 constexpr auto get_lifetime_constraints(
     value_wrapper<ir::func_name("operator[]")>,
     type_list<R, T1, T2>,
-    ir::exp expression) {
-  return std::vector<lifetime_constraint>{lifetime_constraint{
-      .superset = expression.args[0], .subset = expression.id}};
+    const ir::exp& expression) {
+  return std::vector<lifetime_constraint>{
+      {.superset = expression.args[0], .subset = expression.id}};
 }
 
 template <class R, class T1>
 constexpr auto get_lifetime_constraints(
     value_wrapper<ir::func_name("@constructor")>,
     type_list<R*, T1>,
-    ir::exp expression) {
-  return std::vector<lifetime_constraint>{lifetime_constraint{
-      .superset = expression.args[0], .subset = expression.id}};
+    const ir::exp& expression) {
+  return std::vector<lifetime_constraint>{
+      {.superset = expression.args[0], .subset = expression.id}};
 }
 
-template <class Fn>
+}  // namespace mitzi
+
+using namespace mitzi;
+
+template <class F>
 struct run_static {
-  constexpr run_static(Fn) {}
-  inline static auto result = Fn{}();
+  constexpr run_static(F) {}
+  inline static auto result = [] {
+    F{}();
+    return F{};
+  }();
 };
 
 void foo(int arg) {
@@ -110,31 +111,25 @@ void foo(int arg) {
   var pcout = &std::cout;
 
   if_ (v.ref() > index.ref()) scope_ {
-    vec.mut().clear();
+    vec.mut().push_back(v.ref());
   } else_ { scope_ 
-    var read_ptr = *ptr.ref();
-    (*pcout.ref()) << read_ptr.ref();
+    (*pcout.ref()) << *ptr.ref();
   } end_
 
   // uncommenting this will fail the borrow checker
-  //var read_ptr = *ptr.ref();
-  //(*pcout.ref()) << read_ptr.ref();
-
-  static constexpr auto ir = recorder_stack::get_ir();
-
-  static_assert(nll_borrow_checker{}.validate(ir, [](auto... args) {
-     return get_lifetime_constraints(args...);
-  }), "borrow checker failed");
-  recorder_stack::pop();
+  // (*pcout.ref()) << *ptr.ref();
 
   return;
 
-  /*
-  auto tmp = &decltype(run_static([] {
-    mitzi::print(ir);
-    return 0;
+  static constexpr auto ir = recorder_stack::get_ir();
+  recorder_stack::pop();
+
+  static_assert(nll_borrow_checker{}.validate(ir), "borrow checker failed");
+
+  decltype(run_static([] {
+    // uncommenting this will print the IR
+    // mitzi::print(ir);
   }))::result;
-  */
 }
 
 int main() {

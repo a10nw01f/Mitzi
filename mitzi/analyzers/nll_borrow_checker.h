@@ -10,15 +10,20 @@
 
 namespace mitzi {
 
+struct lifetime_constraint {
+  int superset;
+  int subset;
+};
+
 class nll_borrow_checker {
  public:
-  constexpr bool validate(auto ir, auto get_constraints) {
-    collect_lifetime_constraints(ir, get_constraints);
+  constexpr bool validate(auto ir) {
+    collect_lifetime_constraints(ir);
     constexpr auto instructions = ir.get_instructions();
     constexpr auto ids = ir.get_ids();
     preprocess_program(instructions, ids.size());
     int cursor = 0;
-    int initial_block = add_block({});
+    int initial_block = add_block();
     int final_block = parse_scope(instructions, initial_block, cursor);
     auto liveness = liveness_analysis<ids.size()>(cfg, instructions);
     auto regions = infer_regions(instructions, liveness);
@@ -26,6 +31,12 @@ class nll_borrow_checker {
   }
 
  private:
+
+  struct basic_block {
+    std::vector<int> instructions;
+    std::vector<int> successors;
+  };
+
   enum class access_type { ref, mut };
 
   struct loan {
@@ -39,7 +50,7 @@ class nll_borrow_checker {
     return (access1 == access_type::mut || access2 == access_type::mut);
   }
 
-  constexpr auto collect_lifetime_constraints(auto ir, auto get_constraints) {
+  constexpr auto collect_lifetime_constraints(auto ir) {
     static constexpr auto instructions = ir.get_instructions();
     static constexpr auto ids = ir.get_ids();
     using ids_tuple = typename decltype(ir.get_ids())::template rename<std::tuple>;
@@ -68,7 +79,7 @@ class nll_borrow_checker {
                                    ids_tuple>{}
                                    .get()
                                    .get())...>;
-                  for (auto constraint : get_constraints(
+                  for (auto constraint : get_lifetime_constraints(
                            value_wrapper<exp->fn_name>{}, TL{}, *exp)) {
                     this->constraints.emplace_back(constraint);
                   }
@@ -115,8 +126,8 @@ class nll_borrow_checker {
       }
     }
 
-    int merged = add_block({});
-    int taken = add_block({});
+    int merged = add_block();
+    int taken = add_block();
     int end_taken = parse_scope(instructions, taken, cursor);
     connect(parent_block_index, taken);
     connect(end_taken, merged);
@@ -126,7 +137,7 @@ class nll_borrow_checker {
         break;
       }
       cursor++;
-      int skipped = add_block({});
+      int skipped = add_block();
       int end_skipped = parse_scope(instructions, skipped, cursor);
       connect(parent_block_index, skipped);
       connect(end_skipped, merged);
@@ -136,7 +147,7 @@ class nll_borrow_checker {
     if (auto cf = instructions[cursor].get_if<ir::control_flow>();
         cf && *cf == ir::control_flow::_else) {
       cursor++;
-      int skipped = add_block({});
+      int skipped = add_block();
       int end_skipped = parse_scope(instructions, skipped, cursor);
       connect(parent_block_index, skipped);
       connect(end_skipped, merged);
@@ -162,10 +173,10 @@ class nll_borrow_checker {
   constexpr int parse_for_loop(std::span<const ir::instruction> instructions,
                      int parent_block_index,
                      int& cursor) {
-    int header = add_block({});
-    int body = add_block({});
-    int end_loop = add_block({});
-    int merged = add_block({});
+    int header = add_block();
+    int body = add_block();
+    int end_loop = add_block();
+    int merged = add_block();
 
     connect(parent_block_index, header);
     connect(parent_block_index, merged);
@@ -218,7 +229,7 @@ class nll_borrow_checker {
 
   template <auto N>
   constexpr std::vector<var_set<N>> liveness_analysis(
-      const cfg& graph,
+      const std::vector<basic_block>& graph,
       std::span<const mitzi::ir::instruction> all_instrs) {
     auto num_blocks = graph.size();
 
@@ -355,9 +366,9 @@ class nll_borrow_checker {
     return true;
   }
 
-  constexpr int add_block(basic_block&& block) {
+  constexpr int add_block() {
     int index = cfg.size();
-    cfg.emplace_back(std::move(block));
+    cfg.emplace_back();
     return index;
   }
 

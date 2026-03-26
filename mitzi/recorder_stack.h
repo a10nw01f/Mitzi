@@ -11,16 +11,12 @@ struct recorder_stack {
   template <auto eval = [] {},
             class next = stack::template get<>::template push_front<ir::template recorder<>>,
             class TT = stack::set<next>>
-  static consteval auto push() {
-    return next{};
-  }
+  static consteval auto push() {}
 
   template <auto eval = [] {},
             class next = decltype(pop_front(stack::get<eval>{})),
             class TT = stack::set<next>>
-  static consteval auto pop() {
-    return next();
-  }
+  static consteval auto pop() {}
 
   template <auto eval = []{}>
   using get = decltype(mitzi::first(stack::get<eval>{}).get());

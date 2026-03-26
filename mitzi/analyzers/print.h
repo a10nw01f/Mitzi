@@ -36,6 +36,9 @@ inline void print(std::span<const mitzi::ir::instruction> commands,
         case mitzi::ir::control_flow::else_if:
           println("else if");
           break;
+        case mitzi::ir::control_flow::_else:
+          println("else");
+          break;
         case mitzi::ir::control_flow::_for:
           println("for");
           break;
@@ -82,8 +85,7 @@ inline void print(auto fn_info) {
   for_each_type_indexed_unwrap(
       [&](auto type, auto idx) {
         if constexpr (mitzi::type_wrapper_c<decltype(type.get())>) {
-          using T = decltype(type.get().get());
-          names[idx.get()] = mitzi::get_type_name<T>();
+          names[idx.get()] = mitzi::get_type_name(type.get());
         }
       },
       ids);

@@ -2,8 +2,9 @@
 
 #include <source_location>
 #include <string_view>
+#include "utils.h"
 
-class REFLECT_STRUCT {
+class REFLECT_STRUCT_HELPER {
  public:
   enum class ENUM { };
 };
@@ -11,7 +12,7 @@ class REFLECT_STRUCT {
 namespace mitzi {
 
 template <class... Ts>
-[[nodiscard]] constexpr auto function_name() noexcept -> std::string_view {
+constexpr auto function_name() noexcept -> std::string_view {
   return std::source_location::current().function_name();
 }
 
@@ -26,19 +27,19 @@ struct type_name_info {
 template <class T>
   requires std::is_class_v<T>
 struct type_name_info<T> {
-  static constexpr auto name = function_name<::REFLECT_STRUCT>();
-  static constexpr auto begin = name.find("REFLECT_STRUCT");
+  static constexpr auto name = function_name<::REFLECT_STRUCT_HELPER>();
+  static constexpr auto begin = name.find("REFLECT_STRUCT_HELPER");
   static constexpr auto end =
-      name.substr(begin + std::size(std::string_view{"REFLECT_STRUCT"}));
+      name.substr(begin + std::size(std::string_view{"REFLECT_STRUCT_HELPER"}));
 };
 
 template <class T>
   requires std::is_enum_v<T>
 struct type_name_info<T> {
-  static constexpr auto name = function_name<::REFLECT_STRUCT::ENUM>();
-  static constexpr auto begin = name.find("REFLECT_STRUCT::ENUM");
+  static constexpr auto name = function_name<::REFLECT_STRUCT_HELPER::ENUM>();
+  static constexpr auto begin = name.find("REFLECT_STRUCT_HELPER::ENUM");
   static constexpr auto end =
-      name.substr(begin + std::size(std::string_view{"REFLECT_STRUCT::ENUM"}));
+      name.substr(begin + std::size(std::string_view{"REFLECT_STRUCT_HELPER::ENUM"}));
 };
 
 inline constexpr const char* ws = " \t\n\r\f\v";
@@ -57,15 +58,12 @@ inline constexpr void trim(std::string& s, const char* t = ws) {
 }
 
 template <class T>
-constexpr auto get_type_name() noexcept -> std::string {
-  using type_name_info =
-      type_name_info<std::remove_pointer_t<std::remove_cvref_t<T>>>;
+constexpr auto get_type_name(type_wrapper<T>) {
+  using TT = type_name_info<T>;
   auto fn_name = function_name<T>();
-  auto qualified_type_name =
-      fn_name.substr(type_name_info::begin,
-                     fn_name.find(type_name_info::end) - type_name_info::begin);
+  auto name = fn_name.substr(TT::begin, fn_name.find(TT::end) - TT::begin);
 
-  auto result = std::string(qualified_type_name);
+  auto result = std::string(name);
   trim(result);
   return result;
 }
