@@ -61,7 +61,7 @@ class nll_borrow_checker {
     constexpr auto exp_id_to_type = []() {
       std::array<int, ids.size()> map = {};
       for (int i = 0; i < instructions.size(); i++) {
-        if (auto exp = instructions[i].template get_if<ir::exp>()) {
+        if (auto exp = std::get_if<ir::exp>(&instructions[i])) {
           map[exp->id] = exp->type;
         }
       }
@@ -70,7 +70,7 @@ class nll_borrow_checker {
     mitzi::for_each_index(
         [&](auto idx) {
           static constexpr auto inst = instructions[idx.get()];
-          static constexpr auto exp = inst.template get_if<ir::exp>();
+          static constexpr auto exp = std::get_if<ir::exp>(&inst);
           if constexpr (exp) {
             expand_indices(
                 [&](auto... is) {
@@ -99,7 +99,7 @@ class nll_borrow_checker {
     is_used.resize(max_id);
     for (int i = 0; i < instructions.size(); i++) {
       auto& inst = instructions[i];
-      auto exp = inst.get_if<ir::exp>();
+      auto exp = std::get_if<ir::exp>(&inst);
       if (!exp) {
         continue;
       }
@@ -111,7 +111,7 @@ class nll_borrow_checker {
   }
 
   constexpr bool is_end_statement(const ir::instruction& instr) const {
-    if (auto exp = instr.get_if<ir::exp>()) {
+    if (auto exp = std::get_if<ir::exp>(&instr)) {
       return exp->fn_name.view() == "@constructor" || !is_used[exp->id];
     }
     return true;
@@ -121,11 +121,11 @@ class nll_borrow_checker {
                       int parent_block_index,
                       int& cursor) {
     for (; cursor < instructions.size(); cursor++) {
-      if (auto end = instructions[cursor].get_if<ir::control_flow>();
+      if (auto end = std::get_if<ir::control_flow>(&instructions[cursor]);
           end && *end == ir::control_flow::start) {
         break;
       }
-      if (instructions[cursor].get_if<ir::exp>()) {
+      if (std::get_if<ir::exp>(&instructions[cursor])) {
         cfg[parent_block_index].instructions.emplace_back(cursor);
       }
     }
@@ -136,7 +136,7 @@ class nll_borrow_checker {
     connect(parent_block_index, taken);
     connect(end_taken, merged);
     while (true) {
-      auto cf = instructions[cursor].get_if<ir::control_flow>();
+      auto cf = std::get_if<ir::control_flow>(&instructions[cursor]);
       if (!cf || (*cf != ir::control_flow::else_if)) {
         break;
       }
@@ -148,7 +148,7 @@ class nll_borrow_checker {
       parent_block_index = skipped;
     }
 
-    if (auto cf = instructions[cursor].get_if<ir::control_flow>();
+    if (auto cf = std::get_if<ir::control_flow>(&instructions[cursor]);
         cf && *cf == ir::control_flow::_else) {
       cursor++;
       int skipped = add_block();
@@ -165,7 +165,7 @@ class nll_borrow_checker {
                        int& cursor) {
     auto& block = cfg[parent_block_index];
     for (; cursor < instructions.size(); cursor++) {
-      if (instructions[cursor].get_if<ir::exp>()) {
+      if (std::get_if<ir::exp>(&instructions[cursor])) {
         block.instructions.emplace_back(cursor);
       }
       if (is_end_statement(instructions[cursor])) {
@@ -203,7 +203,7 @@ class nll_borrow_checker {
     auto current_block_index = parent_block_index;
     for (; cursor < instructions.size();) {
       auto& inst = instructions[cursor];
-      if (const auto* cf = inst.get_if<ir::control_flow>()) {
+      if (const auto* cf = std::get_if<ir::control_flow>(&inst)) {
         if (*cf == ir::control_flow::_if) {
           cursor++;
           current_block_index =
@@ -218,7 +218,7 @@ class nll_borrow_checker {
         } else {
           cursor++;
         }
-      } else if (const ir::exp* exp = inst.get_if<ir::exp>()) {
+      } else if (const ir::exp* exp = std::get_if<ir::exp>(&inst)) {
         cfg[current_block_index].instructions.emplace_back(cursor);
         cursor++;
       } else {
@@ -242,7 +242,7 @@ class nll_borrow_checker {
 
     for (int i = 0; i < num_blocks; ++i) {
       for (int instr_idx : graph[i].instructions) {
-        const auto& instr = *all_instrs[instr_idx].get_if<mitzi::ir::exp>();
+        const auto& instr = *std::get_if<mitzi::ir::exp>(&all_instrs[instr_idx]);
 
         for (int src : instr.get_args()) {
           if (!block_kill[i][src]) {
@@ -297,7 +297,7 @@ class nll_borrow_checker {
         result[block.instructions[j]] = current_live;
 
         const auto& instr =
-            *all_instrs[block.instructions[j]].get_if<mitzi::ir::exp>();
+            *std::get_if<mitzi::ir::exp>(&all_instrs[block.instructions[j]]);
         current_live[instr.id] = false;
         for (int src : instr.get_args()) {
           current_live[src] = true;
@@ -329,14 +329,14 @@ class nll_borrow_checker {
     return result;
   }
 
-    template <auto N>
+  template <auto N>
   constexpr bool borrow_check(std::span<const ir::instruction> instructions,
                               const std::vector<var_set<N>>& regions,
                               int max_id) {
     std::vector<loan> loans;
     std::vector<bool> is_var(max_id);
     for (int i = 0; i < instructions.size(); i++) {
-      if (auto exp = instructions[i].get_if<mitzi::ir::exp>()) {
+      if (auto exp = std::get_if<mitzi::ir::exp>(&instructions[i])) {
         if (exp->fn_name.view() == "@constructor") {
           is_var[exp->id] = true;
           continue;

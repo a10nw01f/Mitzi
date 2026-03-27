@@ -9,7 +9,7 @@
 #include "../reflect.h"
 
 namespace mitzi {
-inline void print(std::span<const mitzi::ir::instruction> commands,
+inline void print(std::span<const mitzi::ir::instruction> instructions,
            const std::vector<std::string>& type_names) {
   int depth = 0;
   auto println = [&depth](auto&&... vs) {
@@ -18,9 +18,9 @@ inline void print(std::span<const mitzi::ir::instruction> commands,
     }
     (std::cout << ... << vs) << std::endl;
   };
-  for (int i = 1; i < commands.size(); i++) {
-    auto& cmd = commands[i];
-    if (auto* cf = cmd.get_if<mitzi::ir::control_flow>()) {
+  for (int i = 1; i < instructions.size(); i++) {
+    auto& instruction = instructions[i];
+    if (auto* cf = std::get_if<mitzi::ir::control_flow>(&instruction)) {
       switch (*cf) {
         case mitzi::ir::control_flow::start:
           println("{");
@@ -49,7 +49,7 @@ inline void print(std::span<const mitzi::ir::instruction> commands,
           break;
       }
     }
-    if (auto* exp = cmd.get_if<mitzi::ir::exp>()) {
+    if (auto* exp = std::get_if<mitzi::ir::exp>(&instruction)) {
       std::string fncall = "";
       int startArg = 0;
       if (exp->fn_name.c_str()[0] == '.') {

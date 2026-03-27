@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <variant>
 #include "../ir.h"
 
 namespace mitzi {
@@ -16,18 +17,18 @@ class lexical_borrow_checker {
   std::vector<bool> is_var;
   std::vector<int> pointer_depths;
 
-  constexpr bool impl(std::span<ir::instruction> records) { 
+  constexpr bool impl(std::span<ir::instruction> instructions) { 
     scope_stack.emplace_back();
-    for (int i = 0; i < records.size(); i++) {
-      auto record = records[i];
-      if (auto cf = record.get_if<ir::control_flow>()) {
+    for (int i = 0; i < instructions.size(); i++) {
+      auto& instruction = instructions[i];
+      if (auto cf = std::get_if<ir::control_flow>(&instruction)) {
         if (*cf == ir::control_flow::start) {
           auto last = scope_stack.back();
           scope_stack.emplace_back(std::move(last));
         } else if (*cf == ir::control_flow::end) {
           scope_stack.pop_back();
         }
-      } else if (auto exp = record.get_if<ir::exp>()) {
+      } else if (auto exp = std::get_if<ir::exp>(&instruction)) {
         if (is_pointer[exp->type]) {
           is_pointer[exp->id] = true;
         }

@@ -2,8 +2,8 @@
 
 #include <array>
 #include <span>
+#include <variant>
 #include "utils.h"
-#include "variant.h"
 #include "fixed_str.h"
 #include "meta_state.h"
 
@@ -71,7 +71,7 @@ enum class control_flow { start, end, _if, else_if, _else, _for, _return };
   }                                                              \
   else 
 
-using instruction = variant<start, exp, control_flow>;
+using instruction = std::variant<start, exp, control_flow>;
 
 template<class Ids, class Records> 
 struct fn_info {
