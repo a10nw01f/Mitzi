@@ -41,7 +41,10 @@ class nll_borrow_checker {
     std::vector<int> successors;
   };
 
-  enum class access_type { ref, mut };
+  enum class access_type { 
+    ref, 
+    mut 
+  };
 
   struct loan {
     int region;
@@ -335,6 +338,7 @@ class nll_borrow_checker {
                               int max_id) {
     std::vector<loan> loans;
     std::vector<bool> is_var(max_id);
+    std::vector<int> points;
     for (int i = 0; i < instructions.size(); i++) {
       if (auto exp = std::get_if<mitzi::ir::exp>(&instructions[i])) {
         if (exp->fn_name.view() == "@constructor") {
@@ -357,13 +361,18 @@ class nll_borrow_checker {
         auto new_loan =
             loan{.region = exp->id, .path = exp->args[0], .access = *access};
 
-        for (auto& other : loans) {
-          if (regions[i][other.region] && other.path == new_loan.path &&
+        for (auto j = 0; j < loans.size(); ++j) {
+          auto& other = loans[j];
+          if (other.path == new_loan.path &&
               is_access_invalid(other.access, new_loan.access)) {
-            return false;
+            if (regions[i][other.region] ||
+                regions[points[j]][new_loan.region]) {
+              return false;
+            }
           }
         }
         loans.emplace_back(new_loan);
+        points.emplace_back(i);
       }
     }
 

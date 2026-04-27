@@ -31,10 +31,10 @@ struct exp_value<Fn, void> {
 };
 
 template <ir::func_name name,
-          typename Fn,
+          class Fn,
           auto eval = [] {},
           class R = recorder_stack::get<eval>,
-          typename... Args>
+          class... Args>
 class exp
     : public base_provider<std::remove_cvref_t<exp_type<Fn, Args...>>>::base,
       private exp_value<Fn, exp_type<Fn, Args...>> {
