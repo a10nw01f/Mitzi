@@ -21,5 +21,4 @@ Mitzi is licensed under the MIT License. You are free to use, modify, and distri
 Mitzi is still in the early stages of development. While it aims to provide robust compile-time validation features, it may contain bugs or limitations. Please use it with caution and feel free to report any issues you encounter.
 
 ## Dedication
-This library is dedicated to my dearly beloved cat Mitzi who recently passed away.
-I only wish to spend more time with you in this lifetime of the next.
+This library is dedicated to my dearly beloved cat Mitzi who passed away.
